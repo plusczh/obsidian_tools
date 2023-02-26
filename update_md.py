@@ -25,7 +25,7 @@ def get_game_images(keyword, save_path):
         os.makedirs(save_path)
     img_save_path = os.path.join(save_path, keyword + '_cover.jpg')
     
-    return img_save_path, book_url, rating
+    return img_save_path, book_url, rating, 'null', img_response
 
 def get_video_images(keyword, save_path):
     search_url = 'https://www.douban.com/search?cat=1002&q={}'.format(keyword)
@@ -40,12 +40,13 @@ def get_video_images(keyword, save_path):
     rating = book_soup.find('strong').text.strip()
     book_name = book_soup.find('h1').text.strip()
     img_url = book_soup.find('img', {'alt': book_name.split('\n')[0]})['src']
+    author = book_soup.find('div', {'id': 'info'}).find('a').text.strip()
     img_response = requests.get(img_url)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     img_save_path = os.path.join(save_path, keyword + '_cover.jpg')
     
-    return img_save_path, book_url, rating
+    return img_save_path, book_url, rating, author, img_response
 
 def get_book_images(keyword, save_path):
     search_url = 'https://www.douban.com/search?cat=1001&q={}'.format(keyword)
