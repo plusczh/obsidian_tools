@@ -20,13 +20,10 @@ def get_game_images(keyword, save_path):
     rating = book_soup.find('strong').text.strip()
     book_name = book_soup.find('h1').text.strip()
     img_url = book_soup.find('img', {'alt': book_name})['src']
-    # img_url = book_soup.find('img')['src']
     img_response = requests.get(img_url)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     img_save_path = os.path.join(save_path, keyword + '_cover.jpg')
-    # with open(img_save_path, 'wb') as f:
-    #     f.write(img_response.content)
     
     return img_save_path, book_url, rating
 
@@ -43,13 +40,10 @@ def get_video_images(keyword, save_path):
     rating = book_soup.find('strong').text.strip()
     book_name = book_soup.find('h1').text.strip()
     img_url = book_soup.find('img', {'alt': book_name.split('\n')[0]})['src']
-    # img_url = book_soup.find('img')['src']
     img_response = requests.get(img_url)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     img_save_path = os.path.join(save_path, keyword + '_cover.jpg')
-    # with open(img_save_path, 'wb') as f:
-    #     f.write(img_response.content)
     
     return img_save_path, book_url, rating
 
@@ -66,15 +60,13 @@ def get_book_images(keyword, save_path):
     rating = book_soup.find('strong').text.strip()
     book_name = book_soup.find('h1').text.strip()
     img_url = book_soup.find('img', {'alt': book_name})['src']
-    # img_url = book_soup.find('img')['src']
+    author = book_soup.find('div', {'id': 'info'}).find('a').text.strip()
     img_response = requests.get(img_url)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     img_save_path = os.path.join(save_path, keyword + '_cover.jpg')
-    # with open(img_save_path, 'wb') as f:
-    #     f.write(img_response.content)
     
-    return img_save_path, book_url, rating, img_response
+    return img_save_path, book_url, rating, author, img_response
 
 def get_files(patterns, path):
     all_files = []
@@ -87,10 +79,8 @@ def get_files(patterns, path):
 def update_md(md_data, name, cover_dir, type):
     md_out = md_data.copy()
     try:
-        img_path, book_url, rating, img_response = globals()['get_' + type + '_images'](name, cover_dir)
+        img_path, book_url, rating, author, img_response = globals()['get_' + type + '_images'](name, cover_dir)
     except:
-        # 无法下载图片时
-        img_path = os.path.join(cover_dir, name + '_cover.jpg')
         return md_out
     for idx, line in enumerate(md_data):
         # 更新封面
@@ -103,6 +93,9 @@ def update_md(md_data, name, cover_dir, type):
                 md_out[idx] = '封面::' + cover_str + '\n'
             else:
                 md_out[idx] = line
+        elif 'author' in line:
+            if '-' not in md_data[idx+1].split(' '):
+                md_out[idx] = line + '  - ' + author + '\n'
         elif 'douban_link' in line and not line.split(':')[-1].strip():
             md_out[idx] = 'douban_link::' + '[豆瓣链接](' + book_url + ')\n'
         elif 'douban_rating' in line and not line.split(':')[-1].strip():
