@@ -25,8 +25,8 @@ def get_game_images(keyword, save_path):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     img_save_path = os.path.join(save_path, keyword + '_cover.jpg')
-    with open(img_save_path, 'wb') as f:
-        f.write(img_response.content)
+    # with open(img_save_path, 'wb') as f:
+    #     f.write(img_response.content)
     
     return img_save_path, book_url, rating
 
@@ -48,8 +48,8 @@ def get_video_images(keyword, save_path):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     img_save_path = os.path.join(save_path, keyword + '_cover.jpg')
-    with open(img_save_path, 'wb') as f:
-        f.write(img_response.content)
+    # with open(img_save_path, 'wb') as f:
+    #     f.write(img_response.content)
     
     return img_save_path, book_url, rating
 
@@ -71,10 +71,10 @@ def get_book_images(keyword, save_path):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     img_save_path = os.path.join(save_path, keyword + '_cover.jpg')
-    with open(img_save_path, 'wb') as f:
-        f.write(img_response.content)
+    # with open(img_save_path, 'wb') as f:
+    #     f.write(img_response.content)
     
-    return img_save_path, book_url, rating
+    return img_save_path, book_url, rating, img_response
 
 def get_files(patterns, path):
     all_files = []
@@ -86,24 +86,27 @@ def get_files(patterns, path):
 
 def update_md(md_data, name, cover_dir, type):
     md_out = md_data.copy()
+    try:
+        img_path, book_url, rating, img_response = globals()['get_' + type + '_images'](name, cover_dir)
+    except:
+        # 无法下载图片时
+        img_path = os.path.join(cover_dir, name + '_cover.jpg')
+        return md_out
     for idx, line in enumerate(md_data):
         # 更新封面
         if '封面' in line and '!' not in line:
-            try:
-                img_path, book_url, rating = globals()['get_' + type + '_images'](name, cover_dir)
-                print('\t download cover')
-            except:
-                # 无法下载图片时
-                img_path = os.path.join(cover_dir, name + '_cover.jpg')
+            with open(img_path, 'wb') as f:
+                f.write(img_response.content)
+            print('\t download cover')
             if os.path.isfile(img_path):
                 cover_str = '![[{}]]\n'.format(os.path.basename(img_path))
                 md_out[idx] = '封面::' + cover_str + '\n'
             else:
                 md_out[idx] = line
-        elif 'douban_link' in line and len(line) < 8:
-            md_out.insert(idx, 'douban_link: ' + book_url + '\n')
-        elif 'douban_rating' in line and len(line) < 8:
-            md_out.insert(idx, 'douban_rating: ' + rating + '\n')
+        elif 'douban_link' in line and not line.split(':')[-1].strip():
+            md_out[idx] = 'douban_link::' + '[豆瓣链接](' + book_url + ')\n'
+        elif 'douban_rating' in line and not line.split(':')[-1].strip():
+            md_out[idx] = 'douban_rating::' + rating + '\n'
 
     return md_out
 
@@ -114,6 +117,8 @@ if __name__ == '__main__':
     md_files = get_files(patterns, update_dir)
     for md_path in md_files:
         name = os.path.basename(md_path).split('.')[0]
+        if name == '体验清单':
+            continue
         with open(md_path, "r") as f:
             md_data = f.readlines()
         
