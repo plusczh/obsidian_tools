@@ -18,11 +18,12 @@ def get_book_images(keyword, save_path):
     img_response = requests.get(img_url)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    with open(os.path.join(save_path, book_name + '.jpg'), 'wb') as f:
+    img_save_path = os.path.join(save_path, book_name + '_cover.jpg')
+    with open(img_save_path, 'wb') as f:
         f.write(img_response.content)
-
+    return img_save_path
 
 if __name__ == '__main__':
     keyword = "蛙"
-    save_path = "/Users/rod/Downloads"
+    save_path = "/Users/rod/OneDrive/Infrod/附件"
     get_book_images(keyword, save_path)
